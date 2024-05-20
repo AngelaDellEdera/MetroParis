@@ -37,10 +37,10 @@ class View(ft.UserControl):
                       alignment=ft.MainAxisAlignment.CENTER)
 
         # Row with controls
-        self._btnCrea = ft.ElevatedButton(text="Crea Grafo", on_click=self._controller.handleCreaGrafo)
+        self._btnCrea = ft.ElevatedButton(text="Crea Grafo", on_click=self._controller.handleCreaGrafoPesato)
         self._ddStazPartenza = ft.Dropdown(label="Stazione di Partenza")
         self._ddStazArrivo = ft.Dropdown(label="Stazione di Arrivo")
-        self._btnCalcola = ft.ElevatedButton(text="Calcola Raggiungibili", on_click=self._controller.handleCercaRaggiungibili)
+        self._btnCalcola = ft.ElevatedButton(text="Calcola Raggiungibili", on_click=self._controller.handleCercaRaggiungibili ,disabled=True)
 
 
         #Load elements in DD
