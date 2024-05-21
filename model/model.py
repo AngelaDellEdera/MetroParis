@@ -1,5 +1,8 @@
+import geopy.distance
+
 from database.DAO import DAO
 import networkx as nx
+from geopy import distance
 
 class Model:
     def __init__(self):
@@ -8,6 +11,14 @@ class Model:
         self._idMap={}
         for f in self._fermate:
             self._idMap[f.id_fermata]= f
+        self._linee=DAO.getAllLinee()
+        self._lineaMap={}
+        for l in self._linee:
+            self._lineaMap[l.id_linea]=l
+
+    def getBestPath(self,v0,v1):
+        costoTot, path=nx.single_source_dijkstra(self._grafo,v0,v1)
+        return costoTot, path
 
     def buildGraphPesato(self):
         self._grafo.clear()
@@ -68,12 +79,21 @@ class Model:
     def addEdgePesati(self):
         self._grafo.clear_edges()
         allConnessioni=DAO.getAllConnessioni()
-        for c in allConnessioni: #peso= numero di volte che ho aggiunto arco
-            if self._grafo.has_edge(self._idMap[c.id_stazP],self._idMap[c.id_stazA]):
-                self._grafo[self._idMap[c.id_stazP]][self._idMap[c.id_stazA]]["weight"]+=1
+        for c in allConnessioni: #peso= numero di volte che ho aggiunto arco =num di linee che passano su quella tratta
+            #if self._grafo.has_edge(self._idMap[c.id_stazP],self._idMap[c.id_stazA]):
+            #    self._grafo[self._idMap[c.id_stazP]][self._idMap[c.id_stazA]]["weight"]+=1
+            #else:
+            #    self._grafo.add_edge(self._idMap[c.id_stazP], self._idMap[c.id_stazA],weight=1)
+            #peso=tempo di percorrenza
+            v0=self._idMap[c.id_stazP]
+            v1=self._idMap[c.id_stazA]
+            linea=self._lineaMap[c.id_linea]
+            peso=self.getTraversalTime(v0,v1,linea)
+            if self._grafo.has_edge(v0,v1):
+                if self._grafo[v0][v1]['weight']>peso:
+                    self._grafo[v0][v1]['weight']=peso
             else:
-                self._grafo.add_edge(self._idMap[c.id_stazP], self._idMap[c.id_stazA],weight=1)
-
+                self._grafo.add_edge(v0, v1, weight=peso)
     def getEdgeWeight(self,v1,v2):
         return self._grafo[v1][v2]["weight"]
 
@@ -87,3 +107,11 @@ class Model:
 
     def getNumEdges(self):
        return len(self._grafo.edges)
+
+    def getTraversalTime(self,v0,v1,linea):
+      p0=(v0.coordX,v0.coordY)
+      p1 = (v1.coordX, v1.coordY)
+      dist=geopy.distance.distance(p0,p1).km
+      vel=linea.velocita
+      tempo=dist/vel * 60  #in minuti
+      return tempo
